@@ -1,0 +1,250 @@
+---
+title: "Biological data for Lake Trout from the Arctic LTER (AK)"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: scroll
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(knitr)
+library(plyr)
+library(ggplot2)
+library(plotly)
+library(scales)
+library(FSAdata)
+# library(help = "FSAdata")
+
+```
+
+
+```{r, include=FALSE}
+# Choose dataset
+LakeTroutALTER
+# Explore variable definitions
+help.search("LakeTroutALTER", package = "FSAdata")
+# Check for NAs
+is.na(LakeTroutALTER)
+summary(LakeTroutALTER)
+# Attach variables to script
+data <- LakeTroutALTER
+attach(data)
+
+```
+
+Dashboard
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+###
+
+```{r}
+# Size of dataset
+valueBox(caption = "Total data",
+         value = nrow(data),
+         icon = "fa-database")
+
+```
+
+
+
+###
+
+```{r}
+# Percentage of males
+valueBox(caption = "Male",
+         value = percent(length(sex[sex == "M"])/length(sex)),
+         icon = "fa-fish",
+         color = "dodgerblue")
+
+```
+
+###
+
+```{r}
+# Percentage of females
+valueBox(caption = "Female",
+         value = percent(length(sex[sex == "F"])/length(sex)),
+         icon = "fa-fish",
+         color = "deepskyblue")
+
+```
+
+
+###
+
+```{r}
+# Percentage of ind younger than 25 (completed growing seasons)
+valueBox(caption = "Younger than 25",
+         value = percent(length(age[age <= 25])/length(age)),
+         icon = "fa-minus-circle",
+         color = rgb(0,0,1, alpha = 0.3))
+
+```
+
+###
+
+```{r}
+# Percentage of ind older than 25 (completed growing seasons)
+valueBox(caption = "Older than 25",
+         value = percent(length(age[age > 25])/length(age)),
+         icon = "fa-plus-circle",
+         color = rgb(0,0,1, alpha = 0.3))
+
+```
+
+
+
+Row
+----------------------------------------------------------------------
+
+###
+
+```{r}
+# Percentage of total length variation coefficient by sex
+valueBox(caption = "Coef. Var. MALE fish Total Length",
+         value = percent(sd(tl[sex == "M"])/mean(tl[sex == "M"])),
+         icon = "fa-ruler",
+         color = "dodgerblue")
+```
+
+###
+
+```{r}
+# Percentage of total length variation coefficient by sex
+valueBox(caption = "Coef. Var. FEMALE fish Total Length",
+         value = percent(sd(tl[sex == "F"])/mean(tl[sex == "F"])),
+         icon = "fa-ruler",
+         color = "deepskyblue")
+```
+
+
+###
+
+```{r}
+# Percentage of weight variation coefficient by sex
+valueBox(caption = "Coef. Var. MALE fish Weight",
+         value = percent(sd(w[sex == "M"])/mean(w[sex == "M"])),
+         icon = "fa-weight",
+         color = "dodgerblue")
+
+```
+
+###
+
+```{r}
+# Percentage of weight variation coefficient by sex
+valueBox(caption = "Coef. Var. FEMALE fish Weight",
+         value = percent(sd(w[sex == "F"])/mean(w[sex == "F"])),
+         icon = "fa-weight",
+         color = "deepskyblue")
+
+```
+
+
+
+Row
+-----------------------------------------------------------------------
+
+### Figure 1. Histogram of Age
+
+```{r}
+
+fig1a <- ggplot(data, aes(x = age, fill = sex, color = sex)) +
+  geom_histogram(alpha = 0.4, position = "identity") +
+  theme_classic() +
+  labs(x = "Age (growing season)", y = "Frequency") +
+  scale_fill_manual(values = c("red", "aquamarine"))
+
+mean_age <- ddply(data, "sex", summarise, mean_sex = mean(age))
+
+fig1b <- fig1a + 
+  geom_segment(data =  mean_age, aes(x = mean_sex, xend = mean_sex,
+                                   y = 0, yend = c(15, 15), color = sex))
+
+ggplotly(fig1b, height = 400, width = 450)
+
+```
+
+
+### Figure 2. Boxplot of Total Length (mm)
+
+```{r}
+
+xlab2 <- list(title = "Total Length (mm)")
+ylab2 <- list(title = "Sex")
+
+plot_ly(data, x = ~ tl, y = ~ sex,
+        type = "box",
+        color = ~ sex, colors = c("red", "aquamarine"),
+        height = 400, width = 450) %>% layout(xaxis = xlab2, yaxis = ylab2)
+
+```
+
+
+### Figure 3. Boxplot of Weight (g)
+
+```{r}
+
+xlab3 <- list(title = "Weight (g)")
+ylab3 <- list(title = "Sex")
+
+plot_ly(data, x = ~ w, y = ~ sex,
+        type = "box",
+        color = ~ sex, colors = c("red", "aquamarine"),
+        height = 400, width = 450) %>% layout(xaxis = xlab3, yaxis = ylab3)
+
+```
+
+
+
+Row
+-----------------------------------------------------------------------
+
+### Figure 4. Relationship Total Length (mm) / Weight (g)
+
+```{r}
+
+fig4a <- ggplot(data, aes(x = tl, y = w, fill = sex)) +
+  geom_point(aes(colour = sex)) +
+  theme_classic() +
+  labs(x = "Total Length (mm)", y = "Weight (g)") +
+  scale_fill_manual(values = c("red", "aquamarine"))
+
+ggplotly(fig4a, height = 400, width = 450)
+
+```
+
+
+### Figure 5. Relationship Total Length (mm) / Fork Length (mm)
+
+```{r}
+
+fig5a <- ggplot(data, aes(x = tl, y = fl, fill = sex)) +
+  geom_point(aes(colour = sex)) +
+  theme_classic() +
+  labs(x = "Total Length (mm)", y = "Fork Length (mm)") +
+  scale_fill_manual(values = c("red", "aquamarine"))
+
+ggplotly(fig5a, height = 400, width = 450)
+
+```
+
+
+### Figure 6. Relationship Total Length (mm) / Otolith Radius (mm)
+
+```{r}
+
+fig6a <- ggplot(data, aes(x = tl, y = otorad, fill = sex)) +
+  geom_point(aes(colour = sex)) +
+  theme_classic() +
+  labs(x = "Total Length (mm)", y = "Otolith Radius (mm)") +
+  scale_fill_manual(values = c("red", "aquamarine"))
+
+ggplotly(fig6a, height = 400, width = 450)
+
+```
+
