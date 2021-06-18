@@ -248,3 +248,5 @@ ggplotly(fig6a, height = 400, width = 450)
 
 ```
 
+public url to the dashboard:
+https://rpubs.com/tomasimarina/laketroutdashboard
